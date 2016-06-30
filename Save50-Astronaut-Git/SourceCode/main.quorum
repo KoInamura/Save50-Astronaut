@@ -1,0 +1,405 @@
+use Libraries.Game.Game
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Graphics.Color
+use Libraries.Compute.Math
+use Libraries.Game.Graphics.Label
+use Libraries.Game.Graphics.Font
+use Libraries.Game.InputMonitor
+use Libraries.Interface.Events.KeyboardEvent
+use Libraries.Sound.Audio
+
+use Bunny
+use Oponent
+use Bullet
+
+
+class Main is Game
+
+Bunny bunny
+Oponent mover
+Drawable target
+Drawable backGround
+Bullet ballUp
+Bullet ballDown
+Bullet ballLeft
+Bullet ballRight
+
+EnemyFire ballUpE
+EnemyFire ballDownE
+EnemyFire ballLeftE
+EnemyFire ballRightE
+
+Drawable explosion
+Drawable explosion2
+Drawable explosion3
+
+Label label
+Label label2
+Font font
+Font font2
+
+Color white
+Color red
+Color yellow
+Color green
+Color blue
+Color color
+
+Audio bgm
+Audio shoot
+Audio exploding
+Audio youLose
+Audio youWin
+
+Math math
+
+InputMonitor iMonitor
+KeyboardEvent keys
+
+number xDist = 0
+number yDist = 0
+number realdist = 0
+number xPercent = 0
+number yPercent = 0
+number currentX = 0
+number currentY = 0
+number newX = 0
+number newY = 0
+
+number explosionScale = 1
+number scaleSetter = 1
+
+integer speed = 100
+integer ballSpeed = 500
+integer EnemyFireCounter = 0
+integer flashCounter = 0
+integer explosionCounter = 0
+integer endTimer = 0
+
+integer damagePoint = 0
+
+boolean gameOver = false
+
+  
+    action Main
+        StartGame()
+    end
+
+    
+    action CreateGame
+        backGround:Load("images.jpg")
+        Add(backGround)
+
+        bunny:Load()
+        Add(bunny)
+
+        mover:Load("UFO sourcer2.png")
+        mover:SetPosition(300, 300)
+        Add(mover)
+
+        target:Load("Astronaut-Cartoon.png")
+        target:SetPosition(500, 0) 
+        Add(target)
+
+        bunny:SetName("Rabit")
+        mover:SetName("WhiteDot")
+        target:SetName("BlackDot")
+        
+        red = red:Red()
+        ballUp:LoadFilledCircle(10, red)
+        ballUp:SetPosition(0, 0)
+        Add(ballUp)
+
+        green = green:Green()
+        ballDown:LoadFilledCircle(10, green)
+        ballDown:SetPosition(750, 560)
+        Add(ballDown)
+
+        yellow = yellow:Yellow()
+        ballLeft:LoadFilledCircle(10, yellow)
+        ballLeft:SetPosition(750, 0)
+        Add(ballLeft)
+
+        blue = blue:Blue()
+        ballRight:LoadFilledCircle(10, blue)
+        ballRight:SetPosition(0, 560)
+        Add(ballRight)
+        
+        red = red:Red()
+        ballUpE:LoadFilledCircle(10, red)
+        ballUpE:SetPosition(0, 0)
+        Add(ballUpE)
+
+        green = green:Green()
+        ballDownE:LoadFilledCircle(10, green)
+        ballDownE:SetPosition(750, 560)
+        Add(ballDownE)
+
+        yellow = yellow:Yellow()
+        ballLeftE:LoadFilledCircle(10, yellow)
+        ballLeftE:SetPosition(750, 0)
+        Add(ballLeftE)
+
+        blue = blue:Blue()
+        ballRightE:LoadFilledCircle(10, blue)
+        ballRightE:SetPosition(0, 560)
+        Add(ballRightE)
+
+        explosion:LoadFilledCircle(10, red)
+        explosion:SetPosition(0, 0)
+        Add(explosion)
+        explosion:Hide()
+
+        explosion2:LoadFilledCircle(10, yellow)
+        explosion2:SetPosition(0, 0)
+        Add(explosion2)
+        explosion2:Hide()
+
+        explosion3:LoadFilledCircle(10, green)
+        explosion3:SetPosition(0, 0)
+        Add(explosion3)
+        explosion3:Hide()
+
+        //bgm:Load("Audio/2001_theme.wav")
+        //bgm:EnableLooping()
+        //bgm:Play()
+
+        shoot:Load("Audio/MeFiring.wav")
+        exploding:Load("Audio/Explosion.wav")
+        youLose:Load("Audio/Comedy.wav")
+        youWin:Load("Audio/Win.wav")
+
+        AddCollisionListener(bunny)
+        AddCollisionListener(mover)
+        AddCollisionListener(target)
+        AddCollisionListener(ballUp)
+        AddCollisionListener(ballDown)
+        AddCollisionListener(ballLeft)
+        AddCollisionListener(ballRight)
+        AddCollisionListener(ballUpE)
+        AddCollisionListener(ballDownE)
+        AddCollisionListener(ballLeftE)
+        AddCollisionListener(ballRightE)
+
+        if font:FontIsAvailable("Arial Black")
+            font:LoadFont("Arial Black")
+            label:SetFont(font)
+        else
+            output "Caould not find the font!"
+        end
+        label:SetText(" ")
+        label:SetPosition(50, 500)
+        label:SetSize(40)
+        Add(label)
+
+        if font2:FontIsAvailable("Arial Black")
+            font2:LoadFont("Arial Black")
+            label2:SetFont(font2)
+        else
+            output "Caould not find the font!"
+        end
+
+        label2:SetText(" ")
+        label2:SetPosition(500, 300)
+        label2:SetSize(40)
+        Add(label2)
+        
+    end
+
+ 
+    action Update(number seconds)
+        if gameOver = false
+            damagePoint = ballUpE:damageCounter + ballDownE:damageCounter + ballLeftE:damageCounter + ballRightE:damageCounter
+
+            flashCounter = flashCounter +1
+            if flashCounter > 30
+                flashCounter = 0
+            end
+
+            if damagePoint > 5 and damagePoint <= 10
+                DamageEffect1(bunny)
+            elseif damagePoint > 10 and damagePoint <= 15
+                DamageEffect2(bunny)
+            elseif damagePoint >= 15
+                endTimer = endTimer +1
+                explosionCounter = explosionCounter +1
+                AbandonTheShip()
+                if endTimer = 200
+                    exploding:PlayUntilDone()
+                    say "The Alien ship destroyed our rescue ship. You lost the game."
+                    gameOver = true
+                end
+            end
+
+            // Controing the movement of ballUp, ballDown
+            number ballUpnewY = ballUp:GetY() + ballSpeed * seconds
+            ballUp:SetPosition(ballUp:GetX(), ballUpnewY)
+
+            number ballDownNewY = ballDown:GetY() - ballSpeed *seconds
+            ballDown:SetPosition(ballDown:GetX(), ballDownNewY)
+
+            number ballLeftNewX = ballLeft:GetX() - ballSpeed * seconds
+            ballLeft:SetPosition(ballLeftNewX, ballLeft:GetY())
+
+            number ballRightNewX = ballRight:GetX() + ballSpeed * seconds
+            ballRight:SetPosition(ballRightNewX, ballRight:GetY())
+
+
+            // Controing the movement of Enemy fire
+            number ballUpnewYE = ballUpE:GetY() + ballSpeed * seconds
+            ballUpE:SetPosition(ballUpE:GetX(), ballUpnewYE)
+
+            number ballDownNewYE = ballDownE:GetY() - ballSpeed *seconds
+            ballDownE:SetPosition(ballDownE:GetX(), ballDownNewYE)
+
+            number ballLeftNewXE = ballLeftE:GetX() - ballSpeed * seconds
+            ballLeftE:SetPosition(ballLeftNewXE, ballLeftE:GetY())
+
+            number ballRightNewXE = ballRightE:GetX() + ballSpeed * seconds
+            ballRightE:SetPosition(ballRightNewXE, ballRightE:GetY())
+
+            //Setting the firing mechanism for the alien ship
+            EnemyFireCounter = EnemyFireCounter + 1
+            if EnemyFireCounter = 200
+                EnemyFireCounter = 0
+            end
+
+            if EnemyFireCounter = 50
+                shoot:Play()
+                ballUpE:SetPosition(mover:GetX()+50, mover:GetY()+65)
+                ballUpE:Show()
+                ballDownE:SetPosition(mover:GetX()+50, mover:GetY())
+                ballDownE:Show()
+                ballLeftE:SetPosition(mover:GetX(), mover:GetY()+33)
+                ballLeftE:Show()
+                ballRightE:SetPosition(mover:GetX()+100, mover:GetY()+33)
+                ballRightE:Show()
+            end
+
+            // Controling the movement of mover
+            currentX = mover:GetX()
+            currentY = mover:GetY()
+
+            xDist = currentX-target:GetX()
+            yDist = currentY-target:GetY()
+            realDist = math:SquareRoot(xDist*xDist + yDist*yDist)
+            xPercent = xDist / realDist
+            yPercent = yDist /realDist
+
+            newX = currentX - speed*xPercent*seconds
+            newY = currentY - speed*yPercent*seconds
+
+            mover:SetPosition(newX, newY)
+
+            // displaying the counter in the labels
+            integer counter = mover:opCounter
+            text counterText = cast(text, counter)
+                label:SetText(counterText)  
+
+            integer counter2 = bunny:bCounter
+            text counter2Text = cast(text, counter2)
+                label2:SetText(counter2Text)
+
+            if counter >= 50 and counter2 < 50
+                mover:SetColor(color:White())
+                scaleSetter = scaleSetter +0.1
+                mover:SetScale(scaleSetter)
+                    if scaleSetter >= 3.0
+                        youLose:PlayUntilDone()
+                        say "The alien has abducted enough astronaut for their experiment. You lost the game"
+                        gameOver = true
+                    end
+            elseif counter2 >= 50 and counter < 50
+                bunny:SetColor(color:White())
+                scaleSetter = scaleSetter +1
+                bunny:SetScale(scaleSetter)
+                    if scaleSetter >= 3.0
+                        youWin:PlayUntilDone()
+                        say "You rescued enough astronauts to go after the alienship. You won the game."
+                        gameOver = true
+                    end
+            end
+
+            //Calculating the position of bunny
+            number currentXbunny = bunny:GetX()
+            number currentYbunny = bunny:GetY()
+
+            //Calculating the top of bunny, bottom of bunny is GetY()
+            number bunnyTop = currentYbunny + 82
+
+            //Calculating the centerX of bunny
+            number bunnyCenterX = currentXbunny + 45
+
+            //Calculating the centerY of bunny
+            number bunnyCenterY = currentYbunny + 41
+
+            //calculating the right edge of bunny
+            number bunnyRight = currentXbunny + 89
+
+            // Making the bullet come to the top center of bunny
+            if counter2 > 4 and counter2 <= 9
+                if iMonitor:IsKeyPressed(keys:SPACE)
+                    shoot:Play()
+                    ballUp:SetPosition(bunnyCenterX, bunnyTop)
+                end
+            elseif counter2 > 9 and counter2 <= 14
+                if iMonitor:IsKeyPressed(keys:SPACE)
+                    shoot:Play()
+                    ballUp:SetPosition(bunnyCenterX, bunnyTop)
+                    ballDown:SetPosition(bunnyCenterX, currentYbunny)
+                end
+            elseif counter2 > 14 and counter2 <= 19
+                if iMonitor:IsKeyPressed(keys:SPACE)
+                    shoot:Play()
+                    ballUp:SetPosition(bunnyCenterX, bunnyTop)
+                    ballDown:SetPosition(bunnyCenterX, currentYbunny)
+                    ballLeft:SetPosition(currentXbunny, bunnyCenterY)
+                end
+            elseif counter2 > 19
+                if iMonitor:IsKeyPressed(keys:SPACE)
+                    shoot:Play()
+                    ballUp:SetPosition(bunnyCenterX, bunnyTop)
+                    ballDown:SetPosition(bunnyCenterX, currentYbunny)
+                    ballLeft:SetPosition(currentXbunny, bunnyCenterY)
+                    ballRight:SetPosition(bunnyRight, bunnyCenterY)
+                end
+            end
+        elseif gameOver = true
+            Exit()
+        end
+    end
+
+    action DamageEffect1(Drawable ship)
+        if flashCounter  = 1
+            ship:SetColor(color:Green())
+        elseif flashCounter = 15
+            ship:SetColor(color:White())
+        end
+    end
+
+    action DamageEffect2(Drawable ship)
+        if flashCounter  = 1
+            ship:SetColor(color:Red())
+        elseif flashCounter = 15
+            ship:SetColor(color:White())
+        end
+    end
+
+    action AbandonTheShip
+
+                explosion:SetPosition(bunny:GetX() +30, bunny:GetY() +50)
+                explosion:Show()
+                explosion2:SetPosition(bunny:GetX() +10, bunny:GetY() +20)
+                explosion2:Show()
+                explosion3:SetPosition(bunny:GetX() +50, bunny:GetY() +20)
+                explosion3:Show()
+                explosionScale = explosionScale + 0.1
+                if explosionScale >= 4.0
+                explosionScale = 1
+                end
+                explosion:SetScaleFromCenter(explosionScale)
+                explosion2:SetScaleFromCenter(explosionScale)
+                explosion3:SetScaleFromCenter(explosionScale)
+                
+    end
+end

@@ -1,0 +1,28 @@
+use Libraries.Game.Graphics.Drawable
+use Libraries.Compute.Random
+use Libraries.Sound.Audio
+
+class Bullet is Drawable
+
+Random ran
+Audio disappear
+    on create
+        disappear:Load("Audio/AlienDisappear.wav")
+    end
+
+    action BeginCollision(Item item)
+        if item:GetName() = "WhiteDot"
+            disappear:Play()
+            item:Hide()
+           
+            integer newX = ran:RandomInteger(700)
+            integer newY = ran:RandomInteger(510)
+            item:SetPosition(newX, newY)
+            item:Show()
+        elseif item:GetName() = "BlackDotDot"
+        //Do nothing    
+        end
+
+    end
+    
+end

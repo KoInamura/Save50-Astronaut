@@ -1,0 +1,36 @@
+use Libraries.Game.Graphics.Drawable
+use Libraries.Compute.Random
+use Libraries.Sound.Audio
+
+class Oponent is Drawable
+Random ran
+Audio aud
+Audio aud2
+Audio aud3
+
+on create
+aud:Load("Audio/beep.wav")
+aud2:Load("Audio/heavySound.wav")
+aud3:Load("Audio/HelpMe.ogg")
+end
+
+public integer opCounter = 0
+
+    action BeginCollision(Item item)
+        
+        if item:GetName() = "BlackDot"
+            item:Hide()
+            aud2:Play()
+            opCounter = opCounter + 1
+            integer newX = ran:RandomInteger(700)
+            integer newY = ran:RandomInteger(510)
+            item:SetPosition(newX, newY)
+            item:Show()
+            aud3:Play()
+        elseif item:GetName() = "Rabit"
+            aud:Play()
+        end
+    end
+
+  
+end

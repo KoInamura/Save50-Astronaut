@@ -1,0 +1,23 @@
+use Libraries.Game.Graphics.Drawable
+use Libraries.Sound.Audio
+
+class EnemyFire is Drawable
+Audio hit
+public integer damageCounter = 0
+
+on create
+    hit:Load("Audio/Hit.wav")
+end
+
+action BeginCollision(Item item)
+        if item:GetName() = "Rabit"
+            hit:Play()
+            me:Hide()
+            damageCounter = damageCounter +1
+            
+        elseif item:GetName() = "BlackDot"
+        //Do nothing    
+        end
+
+    end
+end
